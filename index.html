@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Intérprete</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0E1520; --panel:#16202E; --panel2:#1C2938;
+    --txt:#E8EDF4; --dim:#7E8CA0;
+    --es:#35C4A0;      /* español */
+    --fx:#E8A33D;      /* idioma extranjero */
+    --danger:#E05A5A;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:'Outfit',-apple-system,system-ui,sans-serif;
+    background:var(--bg); color:var(--txt);
+    display:flex; flex-direction:column;
+    height:100dvh; overflow:hidden;
+  }
+  /* ---------- header ---------- */
+  header{
+    padding:14px 16px 10px;
+    display:flex; align-items:center; justify-content:space-between;
+    flex-shrink:0;
+  }
+  header h1{font-size:19px;font-weight:700;letter-spacing:.3px}
+  header h1 span{color:var(--es)}
+  .top-controls{display:flex;gap:8px;align-items:center}
+  .lang-toggle{
+    display:flex; background:var(--panel); border-radius:99px; padding:3px;
+  }
+  .lang-toggle button{
+    border:0; background:transparent; color:var(--dim);
+    font-family:inherit; font-weight:600; font-size:14px;
+    padding:6px 14px; border-radius:99px; cursor:pointer;
+  }
+  .lang-toggle button.active{background:var(--fx); color:#1a1205}
+  .tts-btn{
+    border:0; background:var(--panel); color:var(--dim);
+    width:38px;height:38px;border-radius:99px;font-size:17px;cursor:pointer;
+  }
+  .tts-btn.on{background:var(--es);color:#04241c}
+  /* ---------- tabs ---------- */
+  .tabs{display:flex;gap:8px;padding:0 16px 10px;flex-shrink:0}
+  .tabs button{
+    flex:1;border:0;border-radius:12px;padding:10px;
+    font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;
+    background:var(--panel);color:var(--dim);
+  }
+  .tabs button.active{background:var(--panel2);color:var(--txt);box-shadow:inset 0 0 0 1.5px var(--es)}
+  /* ---------- transcript ---------- */
+  #feed{
+    flex:1; overflow-y:auto; padding:6px 16px 12px;
+    display:flex; flex-direction:column; gap:14px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .pair{display:flex;flex-direction:column;gap:3px;animation:up .25s ease}
+  @keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .orig{font-size:14px;color:var(--dim);line-height:1.35}
+  .orig b{font-weight:600}
+  .orig.c-fx b{color:var(--fx)} .orig.c-es b{color:var(--es)}
+  .trad{font-size:19px;line-height:1.4;font-weight:600}
+  .trad.c-es{color:var(--es)} .trad.c-fx{color:var(--fx)}
+  #interim{
+    font-size:16px;color:var(--dim);font-style:italic;min-height:22px;
+    padding:0 16px 6px;flex-shrink:0;
+  }
+  #empty{
+    margin:auto;text-align:center;color:var(--dim);font-size:15px;line-height:1.6;
+    padding:0 30px;
+  }
+  #empty .big{font-size:42px;margin-bottom:10px}
+  /* ---------- footer / mic ---------- */
+  footer{
+    flex-shrink:0; padding:10px 16px calc(16px + env(safe-area-inset-bottom));
+    background:linear-gradient(to top,var(--bg) 70%,transparent);
+  }
+  .mic-row{display:flex;gap:10px}
+  .mic{
+    flex:1; border:0; border-radius:var(--radius);
+    padding:16px 10px; font-family:inherit; font-weight:700; font-size:16px;
+    cursor:pointer; transition:transform .1s;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .mic:active{transform:scale(.97)}
+  .mic-fx{background:var(--fx);color:#241804}
+  .mic-es{background:var(--es);color:#04241c}
+  .mic.listening{
+    background:var(--danger)!important; color:#fff!important;
+    animation:pulse 1.2s infinite;
+  }
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(224,90,90,.5)}50%{box-shadow:0 0 0 12px rgba(224,90,90,0)}}
+  #status{
+    text-align:center;font-size:12px;color:var(--dim);padding-top:8px;min-height:16px;
+  }
+  .clear-btn{
+    border:0;background:var(--panel);color:var(--dim);border-radius:12px;
+    padding:0 14px;font-family:inherit;font-size:13px;cursor:pointer;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Intérprete<span>.</span></h1>
+  <div class="top-controls">
+    <div class="lang-toggle">
+      <button id="btnEN" class="active">EN</button>
+      <button id="btnDE">DE</button>
+    </div>
+    <button id="ttsBtn" class="tts-btn on" title="Voz">🔊</button>
+  </div>
+</header>
+
+<div class="tabs">
+  <button id="tabCharla" class="active">🎧 Charla</button>
+  <button id="tabConv">💬 Conversación</button>
+</div>
+
+<div id="feed">
+  <div id="empty">
+    <div class="big">🎙️</div>
+    <b>Modo charla:</b> toca el botón y deja que escuche la charla en inglés o alemán; verás la traducción al español en vivo.
+  </div>
+</div>
+<div id="interim"></div>
+
+<footer>
+  <div class="mic-row" id="micRow"></div>
+  <div id="status"></div>
+</footer>
+
+<script>
+/* ================= estado ================= */
+let lang = 'en';            // idioma extranjero: en | de
+let mode = 'charla';        // charla | conv
+let tts  = true;
+let rec = null, listening = false, listenDir = null; // dir: 'fx2es' | 'es2fx'
+let keepAlive = false;
+
+const LANGS = {
+  en:{rec:'en-US', tts:'en-US', name:'English'},
+  de:{rec:'de-DE', tts:'de-DE', name:'Deutsch'}
+};
+const ES = {rec:'es-ES', tts:'es-ES'};
+
+const feed = document.getElementById('feed');
+const interimEl = document.getElementById('interim');
+const statusEl = document.getElementById('status');
+
+/* ================= UI ================= */
+function setLang(l){
+  lang = l;
+  document.getElementById('btnEN').classList.toggle('active', l==='en');
+  document.getElementById('btnDE').classList.toggle('active', l==='de');
+  stopRec();
+  renderMics();
+}
+function setMode(m){
+  mode = m;
+  document.getElementById('tabCharla').classList.toggle('active', m==='charla');
+  document.getElementById('tabConv').classList.toggle('active', m==='conv');
+  stopRec();
+  renderMics();
+  const empty = document.getElementById('empty');
+  if(empty){
+    empty.innerHTML = m==='charla'
+      ? '<div class="big">🎙️</div><b>Modo charla:</b> toca el botón y deja que escuche la charla en inglés o alemán; verás la traducción al español en vivo.'
+      : '<div class="big">💬</div><b>Modo conversación:</b> usa un botón cuando hables tú en español y el otro cuando hable la otra persona.';
+  }
+}
+function toggleTTS(){
+  tts = !tts;
+  document.getElementById('ttsBtn').classList.toggle('on', tts);
+  if(!tts && hasTTS) speechSynthesis.cancel();
+}
+function renderMics(){
+  const row = document.getElementById('micRow');
+  const n = LANGS[lang].name;
+  if(mode==='charla'){
+    row.innerHTML = `
+      <button class="mic mic-fx" id="micA" data-act="listen" data-dir="fx2es">🎤 Escuchar ${n}</button>
+      <button class="clear-btn" data-act="clear">Borrar</button>`;
+  }else{
+    row.innerHTML = `
+      <button class="mic mic-fx" id="micA" data-act="listen" data-dir="fx2es">🎤 ${n}</button>
+      <button class="mic mic-es" id="micB" data-act="listen" data-dir="es2fx">🎤 Español</button>`;
+  }
+}
+// Delegacion de eventos: funciona aunque el visor bloquee los onclick inline
+document.addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  if(b.id==='btnEN') return setLang('en');
+  if(b.id==='btnDE') return setLang('de');
+  if(b.id==='ttsBtn') return toggleTTS();
+  if(b.id==='tabCharla') return setMode('charla');
+  if(b.id==='tabConv') return setMode('conv');
+  if(b.dataset.act==='clear') return clearFeed();
+  if(b.dataset.act==='listen') return toggleListen(b.dataset.dir, b.id);
+});
+function clearFeed(){ feed.innerHTML=''; }
+
+/* ================= reconocimiento ================= */
+function toggleListen(dir, btnId){
+  if(listening && listenDir===dir){ stopRec(); return; }
+  stopRec();
+  startRec(dir, btnId);
+}
+function startRec(dir, btnId){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){ statusEl.textContent='Este navegador no soporta reconocimiento de voz. Usa Chrome (Android/PC) o Safari (iPhone).'; return; }
+  rec = new SR();
+  rec.lang = dir==='fx2es' ? LANGS[lang].rec : ES.rec;
+  rec.continuous = (mode==='charla');
+  rec.interimResults = true;
+  listenDir = dir; listening = true; keepAlive = (mode==='charla');
+  document.getElementById(btnId).classList.add('listening');
+  statusEl.textContent = 'Escuchando…';
+
+  rec.onresult = e=>{
+    let interim='';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const t = e.results[i][0].transcript.trim();
+      if(e.results[i].isFinal){ if(t) handleFinal(t, dir); }
+      else interim += t+' ';
+    }
+    interimEl.textContent = interim;
+  };
+  rec.onerror = e=>{
+    if(e.error==='not-allowed'){ statusEl.textContent='Permite el acceso al micrófono.'; keepAlive=false; stopRec(); }
+    else if(e.error!=='no-speech'){ statusEl.textContent='Error: '+e.error; }
+  };
+  rec.onend = ()=>{
+    interimEl.textContent='';
+    if(keepAlive && listening){ try{rec.start();}catch(_){} }  // reinicio automático en modo charla
+    else { markStopped(); }
+  };
+  try{ rec.start(); }catch(_){}
+}
+function stopRec(){
+  keepAlive=false;
+  if(rec){ try{rec.stop();}catch(_){} rec=null; }
+  markStopped();
+}
+function markStopped(){
+  listening=false; listenDir=null;
+  document.querySelectorAll('.mic').forEach(b=>b.classList.remove('listening'));
+  statusEl.textContent='';
+  interimEl.textContent='';
+}
+
+/* ================= traducción ================= */
+async function handleFinal(text, dir){
+  const sl = dir==='fx2es' ? lang : 'es';
+  const tl = dir==='fx2es' ? 'es'  : lang;
+  const pair = addPair(text, '…', dir);
+  try{
+    const tr = await translate(text, sl, tl);
+    pair.querySelector('.trad').textContent = tr;
+    if(tts) speak(tr, dir==='fx2es' ? ES.tts : LANGS[lang].tts);
+  }catch(err){
+    pair.querySelector('.trad').textContent = '⚠️ Sin conexión al traductor';
+  }
+  feed.scrollTop = feed.scrollHeight;
+}
+async function translate(text, sl, tl){
+  // 1) endpoint gratuito de Google (funciona abriendo el HTML directo con internet)
+  try{
+    const u = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+    const r = await fetch(u);
+    if(r.ok){
+      const d = await r.json();
+      return d[0].map(x=>x[0]).join('');
+    }
+    throw 0;
+  }catch(_){
+    // 2) respaldo: API de Claude (funciona si la app corre dentro de claude.ai)
+    const r = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,
+        messages:[{role:'user',content:`Traduce de ${sl} a ${tl}. Responde SOLO con la traducción, nada más:\n${text}`}]})
+    });
+    const d = await r.json();
+    return d.content.filter(c=>c.type==='text').map(c=>c.text).join('').trim();
+  }
+}
+function addPair(orig, trad, dir){
+  const empty = document.getElementById('empty'); if(empty) empty.remove();
+  const div = document.createElement('div');
+  div.className='pair';
+  const oc = dir==='fx2es' ? 'c-fx' : 'c-es';
+  const tc = dir==='fx2es' ? 'c-es' : 'c-fx';
+  const tag = dir==='fx2es' ? LANGS[lang].name.slice(0,2).toUpperCase() : 'ES';
+  div.innerHTML = `<div class="orig ${oc}"><b>${tag}</b> · ${escapeH(orig)}</div>
+                   <div class="trad ${tc}">${escapeH(trad)}</div>`;
+  feed.appendChild(div);
+  feed.scrollTop = feed.scrollHeight;
+  return div;
+}
+function escapeH(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+/* ================= voz ================= */
+const hasTTS = ('speechSynthesis' in window);
+let voices=[];
+function loadVoices(){ if(hasTTS) voices = speechSynthesis.getVoices(); }
+if(hasTTS){
+  loadVoices();
+  if(speechSynthesis.onvoiceschanged!==undefined) speechSynthesis.onvoiceschanged=loadVoices;
+}
+function speak(text, langCode){
+  if(!hasTTS) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = langCode;
+  const v = voices.find(v=>v.lang===langCode) || voices.find(v=>v.lang.startsWith(langCode.split('-')[0]));
+  if(v) u.voice=v;
+  u.rate = 1.02;
+  speechSynthesis.speak(u);
+}
+
+/* ================= arranque + diagnostico ================= */
+window.addEventListener('error', e=>{ statusEl.textContent = 'Error: ' + e.message; });
+renderMics();
+(function(){
+  const hasSR = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  if(!hasSR){
+    statusEl.textContent = 'Este visor no soporta microfono. Descarga el archivo y abrelo en Safari (iPhone) o Chrome (Android/PC).';
+  } else {
+    statusEl.textContent = 'Listo';
+    setTimeout(()=>{ if(statusEl.textContent==='Listo') statusEl.textContent=''; }, 2500);
+  }
+})();
+</script>
+</body>
+</html>
