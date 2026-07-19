@@ -3,15 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0B111B">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Intérprete</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#0E1520; --panel:#16202E; --panel2:#1C2938;
-    --txt:#E8EDF4; --dim:#7E8CA0;
-    --es:#35C4A0;      /* español */
-    --fx:#E8A33D;      /* idioma extranjero */
+    --bg:#0B111B; --panel:#151F2E; --panel2:#1C2A3C; --line:#233349;
+    --txt:#EAF0F8; --dim:#8395AC;
+    --es:#35C4A0; --es2:#1FA98A;      /* español */
+    --fx:#F0A93F; --fx2:#E0862E;      /* idioma extranjero */
     --danger:#E05A5A;
     --radius:16px;
   }
@@ -19,54 +20,92 @@
   html,body{height:100%}
   body{
     font-family:'Outfit',-apple-system,system-ui,sans-serif;
-    background:var(--bg); color:var(--txt);
+    color:var(--txt);
+    background:
+      radial-gradient(900px 480px at 85% -10%, rgba(53,196,160,.16), transparent 60%),
+      radial-gradient(800px 460px at -15% 108%, rgba(240,169,63,.13), transparent 60%),
+      var(--bg);
     display:flex; flex-direction:column;
     height:100dvh; overflow:hidden;
   }
+  button{font-family:inherit;cursor:pointer;border:0;-webkit-tap-highlight-color:transparent}
   /* ---------- header ---------- */
   header{
-    padding:14px 16px 10px;
+    padding:14px 16px 8px;
     display:flex; align-items:center; justify-content:space-between;
     flex-shrink:0;
   }
-  header h1{font-size:19px;font-weight:700;letter-spacing:.3px}
+  header h1{font-size:21px;font-weight:800;letter-spacing:.3px}
   header h1 span{color:var(--es)}
   .top-controls{display:flex;gap:8px;align-items:center}
-  .lang-toggle{
-    display:flex; background:var(--panel); border-radius:99px; padding:3px;
+  .icon-btn{
+    background:var(--panel); color:var(--dim);
+    width:40px;height:40px;border-radius:14px;font-size:18px;
+    border:1px solid var(--line);
+    transition:transform .1s;
   }
-  .lang-toggle button{
-    border:0; background:transparent; color:var(--dim);
-    font-family:inherit; font-weight:600; font-size:14px;
-    padding:6px 14px; border-radius:99px; cursor:pointer;
+  .icon-btn:active{transform:scale(.92)}
+  .icon-btn.on{background:linear-gradient(135deg,var(--es),var(--es2));color:#04241c;border-color:transparent}
+  /* ---------- idiomas ---------- */
+  .lang-row{
+    display:flex;gap:8px;padding:6px 16px 10px;flex-shrink:0;
+    overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;
   }
-  .lang-toggle button.active{background:var(--fx); color:#1a1205}
-  .tts-btn{
-    border:0; background:var(--panel); color:var(--dim);
-    width:38px;height:38px;border-radius:99px;font-size:17px;cursor:pointer;
+  .lang-row::-webkit-scrollbar{display:none}
+  .chip{
+    flex-shrink:0;display:flex;align-items:center;gap:6px;
+    background:var(--panel);color:var(--dim);
+    border:1px solid var(--line);border-radius:99px;
+    padding:8px 14px;font-weight:700;font-size:14px;
+    transition:transform .1s;
   }
-  .tts-btn.on{background:var(--es);color:#04241c}
+  .chip:active{transform:scale(.94)}
+  .chip.active{
+    background:linear-gradient(135deg,var(--fx),var(--fx2));
+    color:#241804;border-color:transparent;
+    box-shadow:0 4px 14px rgba(240,169,63,.35);
+  }
   /* ---------- tabs ---------- */
   .tabs{display:flex;gap:8px;padding:0 16px 10px;flex-shrink:0}
   .tabs button{
-    flex:1;border:0;border-radius:12px;padding:10px;
-    font-family:inherit;font-weight:600;font-size:15px;cursor:pointer;
-    background:var(--panel);color:var(--dim);
+    flex:1;border-radius:14px;padding:11px;
+    font-weight:700;font-size:15px;
+    background:var(--panel);color:var(--dim);border:1px solid var(--line);
   }
-  .tabs button.active{background:var(--panel2);color:var(--txt);box-shadow:inset 0 0 0 1.5px var(--es)}
+  .tabs button.active{
+    background:var(--panel2);color:var(--txt);
+    border-color:var(--es);box-shadow:0 0 0 1px var(--es), 0 4px 16px rgba(53,196,160,.18);
+  }
   /* ---------- transcript ---------- */
   #feed{
     flex:1; overflow-y:auto; padding:6px 16px 12px;
-    display:flex; flex-direction:column; gap:14px;
+    display:flex; flex-direction:column; gap:12px;
     -webkit-overflow-scrolling:touch;
   }
-  .pair{display:flex;flex-direction:column;gap:3px;animation:up .25s ease}
-  @keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-  .orig{font-size:14px;color:var(--dim);line-height:1.35}
-  .orig b{font-weight:600}
+  .pair{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-left:4px solid var(--fx);
+    border-radius:var(--radius);
+    padding:12px 14px;
+    display:flex;flex-direction:column;gap:5px;
+    animation:up .28s cubic-bezier(.2,.9,.3,1.2);
+    position:relative;
+  }
+  .pair.from-es{border-left-color:var(--es)}
+  @keyframes up{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
+  .orig{font-size:14px;color:var(--dim);line-height:1.35;padding-right:34px}
+  .orig b{font-weight:700}
   .orig.c-fx b{color:var(--fx)} .orig.c-es b{color:var(--es)}
-  .trad{font-size:19px;line-height:1.4;font-weight:600}
+  .trad{font-size:19px;line-height:1.4;font-weight:600;padding-right:34px}
   .trad.c-es{color:var(--es)} .trad.c-fx{color:var(--fx)}
+  .replay{
+    position:absolute;top:10px;right:10px;
+    background:var(--panel2);color:var(--dim);
+    width:32px;height:32px;border-radius:10px;font-size:14px;
+    border:1px solid var(--line);
+  }
+  .replay:active{transform:scale(.9)}
   #interim{
     font-size:16px;color:var(--dim);font-style:italic;min-height:22px;
     padding:0 16px 6px;flex-shrink:0;
@@ -75,34 +114,100 @@
     margin:auto;text-align:center;color:var(--dim);font-size:15px;line-height:1.6;
     padding:0 30px;
   }
-  #empty .big{font-size:42px;margin-bottom:10px}
-  /* ---------- footer / mic ---------- */
+  #empty .big{font-size:46px;margin-bottom:10px;animation:float 3s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  /* ---------- footer ---------- */
   footer{
-    flex-shrink:0; padding:10px 16px calc(16px + env(safe-area-inset-bottom));
-    background:linear-gradient(to top,var(--bg) 70%,transparent);
+    flex-shrink:0; padding:8px 16px calc(14px + env(safe-area-inset-bottom));
+    background:linear-gradient(to top,var(--bg) 75%,transparent);
   }
+  .action-row{display:flex;gap:8px;padding-bottom:8px}
+  .action-row button{
+    flex:1;background:var(--panel);color:var(--txt);
+    border:1px solid var(--line);border-radius:12px;
+    padding:10px 6px;font-weight:600;font-size:13.5px;
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    transition:transform .1s;
+  }
+  .action-row button:active{transform:scale(.95)}
+  .action-row .wa{color:#57E389}
   .mic-row{display:flex;gap:10px}
   .mic{
-    flex:1; border:0; border-radius:var(--radius);
-    padding:16px 10px; font-family:inherit; font-weight:700; font-size:16px;
-    cursor:pointer; transition:transform .1s;
+    flex:1; border-radius:var(--radius);
+    padding:17px 10px; font-weight:800; font-size:16px;
+    transition:transform .1s;
     display:flex;align-items:center;justify-content:center;gap:8px;
+    box-shadow:0 6px 18px rgba(0,0,0,.35);
   }
-  .mic:active{transform:scale(.97)}
-  .mic-fx{background:var(--fx);color:#241804}
-  .mic-es{background:var(--es);color:#04241c}
+  .mic:active{transform:scale(.96)}
+  .mic-fx{background:linear-gradient(135deg,var(--fx),var(--fx2));color:#241804}
+  .mic-es{background:linear-gradient(135deg,var(--es),var(--es2));color:#04241c}
   .mic.listening{
-    background:var(--danger)!important; color:#fff!important;
+    background:linear-gradient(135deg,#E76B6B,#C93B3B)!important; color:#fff!important;
     animation:pulse 1.2s infinite;
   }
-  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(224,90,90,.5)}50%{box-shadow:0 0 0 12px rgba(224,90,90,0)}}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(224,90,90,.55)}50%{box-shadow:0 0 0 14px rgba(224,90,90,0)}}
   #status{
-    text-align:center;font-size:12px;color:var(--dim);padding-top:8px;min-height:16px;
+    text-align:center;font-size:12.5px;color:var(--dim);padding-top:8px;min-height:18px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
   }
-  .clear-btn{
-    border:0;background:var(--panel);color:var(--dim);border-radius:12px;
-    padding:0 14px;font-family:inherit;font-size:13px;cursor:pointer;
+  /* onda animada al escuchar */
+  .wave{display:flex;gap:3px;align-items:center;height:14px}
+  .wave i{
+    width:3px;border-radius:2px;background:var(--danger);
+    animation:wv 1s ease-in-out infinite;
   }
+  .wave i:nth-child(1){height:5px;animation-delay:0s}
+  .wave i:nth-child(2){height:11px;animation-delay:.15s}
+  .wave i:nth-child(3){height:14px;animation-delay:.3s}
+  .wave i:nth-child(4){height:9px;animation-delay:.45s}
+  .wave i:nth-child(5){height:5px;animation-delay:.6s}
+  @keyframes wv{0%,100%{transform:scaleY(.5)}50%{transform:scaleY(1.3)}}
+  /* ---------- modal guardadas ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(4,8,14,.66);backdrop-filter:blur(3px);
+    display:flex;align-items:flex-end;justify-content:center;
+    opacity:0;pointer-events:none;transition:opacity .22s;z-index:20;
+  }
+  .overlay.show{opacity:1;pointer-events:auto}
+  .sheet{
+    width:100%;max-width:560px;max-height:78dvh;
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:22px 22px 0 0;
+    padding:16px 16px calc(18px + env(safe-area-inset-bottom));
+    display:flex;flex-direction:column;gap:12px;
+    transform:translateY(30px);transition:transform .24s cubic-bezier(.2,.9,.3,1.15);
+  }
+  .overlay.show .sheet{transform:none}
+  .sheet-head{display:flex;align-items:center;justify-content:space-between}
+  .sheet-head h2{font-size:17px;font-weight:800}
+  .sheet-list{overflow-y:auto;display:flex;flex-direction:column;gap:10px;-webkit-overflow-scrolling:touch}
+  .saved-item{
+    background:var(--panel2);border:1px solid var(--line);border-radius:14px;
+    padding:12px;display:flex;flex-direction:column;gap:8px;
+  }
+  .saved-meta{font-size:13px;color:var(--dim)}
+  .saved-meta b{color:var(--txt);font-size:14px}
+  .saved-prev{font-size:13.5px;color:var(--dim);line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+  .saved-actions{display:flex;gap:8px}
+  .saved-actions button{
+    flex:1;background:var(--panel);border:1px solid var(--line);color:var(--txt);
+    border-radius:10px;padding:8px 4px;font-size:12.5px;font-weight:600;
+  }
+  .saved-actions .del{color:var(--danger)}
+  .saved-actions .wa{color:#57E389}
+  .no-saved{text-align:center;color:var(--dim);padding:26px 10px;font-size:14px}
+  /* ---------- toast ---------- */
+  #toast{
+    position:fixed;left:50%;bottom:calc(120px + env(safe-area-inset-bottom));
+    transform:translateX(-50%) translateY(14px);
+    background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+    padding:10px 18px;border-radius:99px;font-size:14px;font-weight:600;
+    opacity:0;pointer-events:none;transition:.25s;z-index:30;
+    box-shadow:0 8px 24px rgba(0,0,0,.45);white-space:nowrap;
+  }
+  #toast.show{opacity:1;transform:translateX(-50%)}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -110,56 +215,79 @@
 <header>
   <h1>Intérprete<span>.</span></h1>
   <div class="top-controls">
-    <div class="lang-toggle">
-      <button id="btnEN" class="active">EN</button>
-      <button id="btnDE">DE</button>
-    </div>
-    <button id="ttsBtn" class="tts-btn on" title="Voz">🔊</button>
+    <button id="savedBtn" class="icon-btn" title="Charlas guardadas">📂</button>
+    <button id="ttsBtn" class="icon-btn on" title="Voz">🔊</button>
   </div>
 </header>
+
+<div class="lang-row" id="langRow"></div>
 
 <div class="tabs">
   <button id="tabCharla" class="active">🎧 Charla</button>
   <button id="tabConv">💬 Conversación</button>
 </div>
 
-<div id="feed">
-  <div id="empty">
-    <div class="big">🎙️</div>
-    <b>Modo charla:</b> toca el botón y deja que escuche la charla en inglés o alemán; verás la traducción al español en vivo.
-  </div>
-</div>
+<div id="feed"></div>
 <div id="interim"></div>
 
 <footer>
+  <div class="action-row">
+    <button data-act="save">💾 Guardar</button>
+    <button data-act="share" class="wa">📤 WhatsApp</button>
+    <button data-act="clear">🗑️ Borrar</button>
+  </div>
   <div class="mic-row" id="micRow"></div>
   <div id="status"></div>
 </footer>
 
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2>📂 Charlas guardadas</h2>
+      <button class="icon-btn" data-act="close-saved">✕</button>
+    </div>
+    <div class="sheet-list" id="savedList"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
 <script>
+/* ================= idiomas ================= */
+const LANGS = {
+  en:{rec:'en-US', tts:'en-US', tr:'en',    name:'English',   flag:'🇺🇸', tag:'EN'},
+  de:{rec:'de-DE', tts:'de-DE', tr:'de',    name:'Deutsch',   flag:'🇩🇪', tag:'DE'},
+  fr:{rec:'fr-FR', tts:'fr-FR', tr:'fr',    name:'Français',  flag:'🇫🇷', tag:'FR'},
+  zh:{rec:'zh-CN', tts:'zh-CN', tr:'zh-CN', name:'中文',       flag:'🇨🇳', tag:'ZH'},
+  it:{rec:'it-IT', tts:'it-IT', tr:'it',    name:'Italiano',  flag:'🇮🇹', tag:'IT'},
+  pt:{rec:'pt-PT', tts:'pt-PT', tr:'pt',    name:'Português', flag:'🇵🇹', tag:'PT'}
+};
+const ES = {rec:'es-ES', tts:'es-ES', tr:'es'};
+const STORE_KEY = 'interprete_guardadas';
+
 /* ================= estado ================= */
-let lang = 'en';            // idioma extranjero: en | de
+let lang = 'en';            // idioma extranjero activo
 let mode = 'charla';        // charla | conv
 let tts  = true;
 let rec = null, listening = false, listenDir = null; // dir: 'fx2es' | 'es2fx'
 let keepAlive = false;
-
-const LANGS = {
-  en:{rec:'en-US', tts:'en-US', name:'English'},
-  de:{rec:'de-DE', tts:'de-DE', name:'Deutsch'}
-};
-const ES = {rec:'es-ES', tts:'es-ES'};
+let session = [];           // pares de la charla actual [{o,t,oTag,tTag,dir,tl}]
 
 const feed = document.getElementById('feed');
 const interimEl = document.getElementById('interim');
 const statusEl = document.getElementById('status');
 
 /* ================= UI ================= */
+function renderLangs(){
+  const row = document.getElementById('langRow');
+  row.innerHTML = Object.keys(LANGS).map(k=>
+    `<button class="chip${k===lang?' active':''}" data-lang="${k}">${LANGS[k].flag} ${LANGS[k].tag}</button>`
+  ).join('');
+}
 function setLang(l){
   lang = l;
-  document.getElementById('btnEN').classList.toggle('active', l==='en');
-  document.getElementById('btnDE').classList.toggle('active', l==='de');
   stopRec();
+  renderLangs();
   renderMics();
 }
 function setMode(m){
@@ -168,12 +296,14 @@ function setMode(m){
   document.getElementById('tabConv').classList.toggle('active', m==='conv');
   stopRec();
   renderMics();
+  renderEmpty();
+}
+function renderEmpty(){
   const empty = document.getElementById('empty');
-  if(empty){
-    empty.innerHTML = m==='charla'
-      ? '<div class="big">🎙️</div><b>Modo charla:</b> toca el botón y deja que escuche la charla en inglés o alemán; verás la traducción al español en vivo.'
-      : '<div class="big">💬</div><b>Modo conversación:</b> usa un botón cuando hables tú en español y el otro cuando hable la otra persona.';
-  }
+  if(!empty) return;
+  empty.innerHTML = mode==='charla'
+    ? '<div class="big">🎙️</div><b>Modo charla:</b> toca el botón y deja que escuche la charla en el idioma elegido; verás la traducción al español en vivo.'
+    : '<div class="big">💬</div><b>Modo conversación:</b> usa un botón cuando hables tú en español y el otro cuando hable la otra persona.';
 }
 function toggleTTS(){
   tts = !tts;
@@ -182,29 +312,45 @@ function toggleTTS(){
 }
 function renderMics(){
   const row = document.getElementById('micRow');
-  const n = LANGS[lang].name;
+  const L = LANGS[lang];
   if(mode==='charla'){
-    row.innerHTML = `
-      <button class="mic mic-fx" id="micA" data-act="listen" data-dir="fx2es">🎤 Escuchar ${n}</button>
-      <button class="clear-btn" data-act="clear">Borrar</button>`;
+    row.innerHTML = `<button class="mic mic-fx" id="micA" data-act="listen" data-dir="fx2es">🎤 Escuchar ${L.flag} ${L.name}</button>`;
   }else{
     row.innerHTML = `
-      <button class="mic mic-fx" id="micA" data-act="listen" data-dir="fx2es">🎤 ${n}</button>
+      <button class="mic mic-fx" id="micA" data-act="listen" data-dir="fx2es">🎤 ${L.flag} ${L.name}</button>
       <button class="mic mic-es" id="micB" data-act="listen" data-dir="es2fx">🎤 Español</button>`;
   }
 }
-// Delegacion de eventos: funciona aunque el visor bloquee los onclick inline
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+// Delegación de eventos: funciona aunque el visor bloquee los onclick inline
 document.addEventListener('click', e=>{
   const b = e.target.closest('button'); if(!b) return;
-  if(b.id==='btnEN') return setLang('en');
-  if(b.id==='btnDE') return setLang('de');
+  if(b.dataset.lang) return setLang(b.dataset.lang);
   if(b.id==='ttsBtn') return toggleTTS();
+  if(b.id==='savedBtn') return openSaved();
   if(b.id==='tabCharla') return setMode('charla');
   if(b.id==='tabConv') return setMode('conv');
   if(b.dataset.act==='clear') return clearFeed();
+  if(b.dataset.act==='save') return saveSession();
+  if(b.dataset.act==='share') return shareSession(session);
+  if(b.dataset.act==='close-saved') return closeSaved();
   if(b.dataset.act==='listen') return toggleListen(b.dataset.dir, b.id);
+  if(b.dataset.act==='replay') return replayPair(+b.dataset.i);
+  if(b.dataset.act==='sv-open') return openSavedSession(+b.dataset.id);
+  if(b.dataset.act==='sv-share'){ const s=getSaved().find(x=>x.id===+b.dataset.id); if(s) shareSession(s.pairs, s.fecha); return; }
+  if(b.dataset.act==='sv-del') return deleteSaved(+b.dataset.id);
 });
-function clearFeed(){ feed.innerHTML=''; }
+function clearFeed(){
+  session = [];
+  feed.innerHTML = '<div id="empty"></div>';
+  renderEmpty();
+}
 
 /* ================= reconocimiento ================= */
 function toggleListen(dir, btnId){
@@ -221,7 +367,7 @@ function startRec(dir, btnId){
   rec.interimResults = true;
   listenDir = dir; listening = true; keepAlive = (mode==='charla');
   document.getElementById(btnId).classList.add('listening');
-  statusEl.textContent = 'Escuchando…';
+  setListeningStatus();
 
   rec.onresult = e=>{
     let interim='';
@@ -243,6 +389,9 @@ function startRec(dir, btnId){
   };
   try{ rec.start(); }catch(_){}
 }
+function setListeningStatus(){
+  statusEl.innerHTML = '<span class="wave"><i></i><i></i><i></i><i></i><i></i></span> Escuchando…';
+}
 function stopRec(){
   keepAlive=false;
   if(rec){ try{rec.stop();}catch(_){} rec=null; }
@@ -257,53 +406,135 @@ function markStopped(){
 
 /* ================= traducción ================= */
 async function handleFinal(text, dir){
-  const sl = dir==='fx2es' ? lang : 'es';
-  const tl = dir==='fx2es' ? 'es'  : lang;
-  const pair = addPair(text, '…', dir);
+  const sl = dir==='fx2es' ? LANGS[lang].tr : ES.tr;
+  const tl = dir==='fx2es' ? ES.tr : LANGS[lang].tr;
+  const entry = {
+    o:text, t:'…', dir,
+    oTag: dir==='fx2es' ? LANGS[lang].tag : 'ES',
+    tTag: dir==='fx2es' ? 'ES' : LANGS[lang].tag,
+    tl:   dir==='fx2es' ? ES.tts : LANGS[lang].tts
+  };
+  session.push(entry);
+  const div = addPair(entry);
   try{
     const tr = await translate(text, sl, tl);
-    pair.querySelector('.trad').textContent = tr;
-    if(tts) speak(tr, dir==='fx2es' ? ES.tts : LANGS[lang].tts);
+    entry.t = tr;
+    div.querySelector('.trad').textContent = tr;
+    if(tts) speak(tr, entry.tl);
   }catch(err){
-    pair.querySelector('.trad').textContent = '⚠️ Sin conexión al traductor';
+    entry.t = '⚠️ Sin conexión al traductor';
+    div.querySelector('.trad').textContent = entry.t;
   }
   feed.scrollTop = feed.scrollHeight;
 }
 async function translate(text, sl, tl){
-  // 1) endpoint gratuito de Google (funciona abriendo el HTML directo con internet)
-  try{
-    const u = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
-    const r = await fetch(u);
-    if(r.ok){
-      const d = await r.json();
-      return d[0].map(x=>x[0]).join('');
-    }
-    throw 0;
-  }catch(_){
-    // 2) respaldo: API de Claude (funciona si la app corre dentro de claude.ai)
-    const r = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,
-        messages:[{role:'user',content:`Traduce de ${sl} a ${tl}. Responde SOLO con la traducción, nada más:\n${text}`}]})
-    });
-    const d = await r.json();
-    return d.content.filter(c=>c.type==='text').map(c=>c.text).join('').trim();
-  }
+  const u = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sl}&tl=${tl}&dt=t&q=${encodeURIComponent(text)}`;
+  const r = await fetch(u);
+  if(!r.ok) throw 0;
+  const d = await r.json();
+  return d[0].map(x=>x[0]).join('');
 }
-function addPair(orig, trad, dir){
+function addPair(entry){
   const empty = document.getElementById('empty'); if(empty) empty.remove();
   const div = document.createElement('div');
-  div.className='pair';
-  const oc = dir==='fx2es' ? 'c-fx' : 'c-es';
-  const tc = dir==='fx2es' ? 'c-es' : 'c-fx';
-  const tag = dir==='fx2es' ? LANGS[lang].name.slice(0,2).toUpperCase() : 'ES';
-  div.innerHTML = `<div class="orig ${oc}"><b>${tag}</b> · ${escapeH(orig)}</div>
-                   <div class="trad ${tc}">${escapeH(trad)}</div>`;
+  const fromEs = entry.dir==='es2fx';
+  div.className = 'pair' + (fromEs ? ' from-es' : '');
+  const oc = fromEs ? 'c-es' : 'c-fx';
+  const tc = fromEs ? 'c-fx' : 'c-es';
+  const idx = session.indexOf(entry);
+  div.innerHTML = `<div class="orig ${oc}"><b>${entry.oTag}</b> · ${escapeH(entry.o)}</div>
+                   <div class="trad ${tc}">${escapeH(entry.t)}</div>
+                   <button class="replay" data-act="replay" data-i="${idx}" title="Repetir">🔊</button>`;
   feed.appendChild(div);
   feed.scrollTop = feed.scrollHeight;
   return div;
 }
+function replayPair(i){
+  const p = session[i];
+  if(p && p.t && p.t!=='…' && !p.t.startsWith('⚠️')) speak(p.t, p.tl);
+}
 function escapeH(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+/* ================= guardar / cargar ================= */
+function getSaved(){
+  try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || []; }
+  catch(_){ return []; }
+}
+function saveSession(){
+  const pairs = session.filter(p=>p.t && p.t!=='…');
+  if(!pairs.length){ toast('Nada que guardar todavía'); return; }
+  const list = getSaved();
+  // idioma real de las frases guardadas (no el seleccionado al momento de guardar)
+  const tags = [...new Set(pairs.flatMap(p=>[p.oTag,p.tTag]))].filter(t=>t!=='ES');
+  const idioma = tags.map(t=>{
+    const k = Object.keys(LANGS).find(k=>LANGS[k].tag===t);
+    return k ? LANGS[k].flag+' '+t : t;
+  }).join(' · ') || 'ES';
+  list.unshift({
+    id: Date.now(),
+    fecha: new Date().toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}),
+    modo: mode==='charla' ? 'Charla' : 'Conversación',
+    idioma,
+    pairs: pairs.map(p=>({o:p.o,t:p.t,oTag:p.oTag,tTag:p.tTag,dir:p.dir,tl:p.tl}))
+  });
+  if(list.length>40) list.length = 40;
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify(list));
+    toast('💾 Guardada ('+pairs.length+' frases)');
+  }catch(_){ toast('⚠️ Sin espacio para guardar'); }
+}
+function openSaved(){
+  const list = getSaved();
+  const el = document.getElementById('savedList');
+  if(!list.length){
+    el.innerHTML = '<div class="no-saved">Aún no tienes charlas guardadas.<br>Usa 💾 Guardar después de interpretar algo.</div>';
+  }else{
+    el.innerHTML = list.map(s=>`
+      <div class="saved-item">
+        <div class="saved-meta"><b>${s.idioma} ${escapeH(s.modo)}</b> · ${escapeH(s.fecha)} · ${s.pairs.length} frases</div>
+        <div class="saved-prev">${escapeH(s.pairs[0] ? s.pairs[0].o+' → '+s.pairs[0].t : '')}</div>
+        <div class="saved-actions">
+          <button data-act="sv-open" data-id="${s.id}">👁️ Ver</button>
+          <button data-act="sv-share" data-id="${s.id}" class="wa">📤 WhatsApp</button>
+          <button data-act="sv-del" data-id="${s.id}" class="del">🗑️</button>
+        </div>
+      </div>`).join('');
+  }
+  document.getElementById('overlay').classList.add('show');
+}
+function closeSaved(){ document.getElementById('overlay').classList.remove('show'); }
+function openSavedSession(id){
+  const s = getSaved().find(x=>x.id===id);
+  if(!s) return;
+  stopRec();
+  session = s.pairs.map(p=>({...p}));
+  feed.innerHTML = '';
+  session.forEach(p=>addPair(p));
+  closeSaved();
+  toast('Charla del '+s.fecha+' cargada');
+}
+function deleteSaved(id){
+  const list = getSaved().filter(x=>x.id!==id);
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(list)); }catch(_){}
+  openSaved(); // re-render
+  toast('Charla borrada');
+}
+
+/* ================= compartir ================= */
+function buildShareText(pairs, fecha){
+  const head = '🎙️ Intérprete · ' + (fecha || new Date().toLocaleString('es-MX',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}));
+  const body = pairs.map(p=>`[${p.oTag}] ${p.o}\n[${p.tTag}] ${p.t}`).join('\n\n');
+  return head + '\n\n' + body;
+}
+async function shareSession(pairs, fecha){
+  const ok = (pairs||[]).filter(p=>p.t && p.t!=='…');
+  if(!ok.length){ toast('Nada que compartir todavía'); return; }
+  const text = buildShareText(ok, fecha);
+  if(navigator.share){
+    try{ await navigator.share({text}); return; }catch(e){ if(e.name==='AbortError') return; }
+  }
+  window.open('https://wa.me/?text='+encodeURIComponent(text), '_blank');
+}
 
 /* ================= voz ================= */
 const hasTTS = ('speechSynthesis' in window);
@@ -323,18 +554,24 @@ function speak(text, langCode){
   speechSynthesis.speak(u);
 }
 
-/* ================= arranque + diagnostico ================= */
+/* ================= arranque + diagnóstico ================= */
 window.addEventListener('error', e=>{ statusEl.textContent = 'Error: ' + e.message; });
+renderLangs();
 renderMics();
+clearFeed();
 (function(){
   const hasSR = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
   if(!hasSR){
-    statusEl.textContent = 'Este visor no soporta microfono. Descarga el archivo y abrelo en Safari (iPhone) o Chrome (Android/PC).';
+    statusEl.textContent = 'Este visor no soporta micrófono. Ábrelo en Chrome (Android/PC) o Safari (iPhone).';
   } else {
     statusEl.textContent = 'Listo';
     setTimeout(()=>{ if(statusEl.textContent==='Listo') statusEl.textContent=''; }, 2500);
   }
 })();
+/* Service worker: deja abrir la app y leer guardadas sin internet */
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
 </script>
 </body>
 </html>
